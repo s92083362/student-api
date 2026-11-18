@@ -18,46 +18,64 @@ public class StudentController {
 
     // Add a new student
     @PostMapping
-    public Student addStudent(@RequestBody Student student) {
-        return studentRepository.save(student);
+    public StudentResponse addStudent(
+            @RequestBody StudentRequest request) {
+
+        Student student = new Student();
+        student.setName(request.name());
+        student.setEmail(request.email());
+        student.setCourse(request.course());
+
+        Student savedStudent = studentRepository.save(student);
+
+        return StudentResponse.from(savedStudent);
     }
 
     // Get all students
     @GetMapping
-    public List<Student> getAllStudents() {
-        return studentRepository.findAll();
+    public List<StudentResponse> getAllStudents() {
+        return studentRepository.findAll()
+                .stream()
+                .map(StudentResponse::from)
+                .toList();
     }
 
     // Get one student by ID
     @GetMapping("/{id}")
-    public ResponseEntity<Student> getStudentById(@PathVariable Long id) {
+    public ResponseEntity<StudentResponse> getStudentById(
+            @PathVariable Long id) {
+
         return studentRepository.findById(id)
+                .map(StudentResponse::from)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     // Update a student
     @PutMapping("/{id}")
-    public ResponseEntity<Student> updateStudent(
+    public ResponseEntity<StudentResponse> updateStudent(
             @PathVariable Long id,
-            @RequestBody Student studentDetails) {
+            @RequestBody StudentRequest request) {
 
         return studentRepository.findById(id)
                 .map(student -> {
-                    student.setName(studentDetails.getName());
-                    student.setEmail(studentDetails.getEmail());
-                    student.setCourse(studentDetails.getCourse());
+                    student.setName(request.name());
+                    student.setEmail(request.email());
+                    student.setCourse(request.course());
 
-                    Student updatedStudent = studentRepository.save(student);
+                    Student updatedStudent =
+                            studentRepository.save(student);
 
-                    return ResponseEntity.ok(updatedStudent);
+                    return ResponseEntity.ok(
+                            StudentResponse.from(updatedStudent));
                 })
                 .orElse(ResponseEntity.notFound().build());
     }
 
     // Delete a student
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteStudent(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteStudent(
+            @PathVariable Long id) {
 
         if (!studentRepository.existsById(id)) {
             return ResponseEntity.notFound().build();
