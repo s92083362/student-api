@@ -14,7 +14,7 @@ permissions:
 
 jobs:
   build:
-    name: Build, Test and SonarQube Analysis
+    name: Build, Test, SonarQube and Trivy Scan
     runs-on: ubuntu-latest
 
     steps:
@@ -41,3 +41,16 @@ jobs:
           -Dsonar.projectKey=s92083362_student-api
           -Dsonar.organization=s92083362
           -Dsonar.host.url=https://sonarcloud.io
+
+      - name: Build Docker image
+        run: docker build -t student-api:latest .
+
+      - name: Install Trivy
+        uses: aquasecurity/setup-trivy@v0.2.3
+
+      - name: Scan Docker image with Trivy
+        run: |
+          trivy image \
+            --severity HIGH,CRITICAL \
+            --ignore-unfixed \
+            student-api:latest
